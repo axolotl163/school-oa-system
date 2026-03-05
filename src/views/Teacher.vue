@@ -15,6 +15,7 @@
         <el-table-column prop="title" label="职称" width="100" />
         <el-table-column prop="department" label="部门" width="120" />
         <el-table-column prop="phone" label="电话" width="120" />
+        <el-table-column prop="class_name" label="所属班级" width="120" />
         <el-table-column label="操作" width="180">
           <template #default="scope">
             <el-button type="primary" size="small" @click="teacherStore.editTeacher(scope.row)">
@@ -30,7 +31,10 @@
       <el-dialog title="教师信息" v-model="teacherStore.showDialog" width="500px">
         <el-form :model="teacherStore.editForm" label-width="80px">
           <el-form-item label="姓名">
-            <el-input v-model="teacherStore.editForm.name" placeholder="请输入姓名"></el-input>
+            <el-input v-model="teacherStore.editForm.name" placeholder="请输入姓名（同时作为登录用户名）"></el-input>
+          </el-form-item>
+          <el-form-item label="密码">
+            <el-input v-model="teacherStore.editForm.password" type="password" placeholder="登录密码"></el-input>
           </el-form-item>
           <el-form-item label="性别">
             <el-select v-model="teacherStore.editForm.gender" placeholder="请选择性别">
@@ -47,6 +51,11 @@
           <el-form-item label="电话">
             <el-input v-model="teacherStore.editForm.phone" placeholder="请输入电话"></el-input>
           </el-form-item>
+          <el-form-item label="所属班级" required>
+            <el-select v-model="teacherStore.editForm.class_id" placeholder="请选择班级" style="width:100%">
+              <el-option v-for="c in classStore.classList" :key="c.id" :label="c.name" :value="c.id"/>
+            </el-select>
+          </el-form-item>
         </el-form>
         <template #footer>
           <el-button @click="teacherStore.showDialog = false">取消</el-button>
@@ -60,12 +69,15 @@
 <script setup>
 import { onMounted } from "vue";
 import { useTeacherStore } from "@/stores/teacher";
+import { useClassStore } from "@/stores/class";
 import { Plus, Edit, Delete } from "@element-plus/icons-vue";
 
 const teacherStore = useTeacherStore();
+const classStore = useClassStore();
 
 onMounted(() => {
   teacherStore.fetchTeachers();
+  classStore.fetchClasses();
 });
 </script>
 

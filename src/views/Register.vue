@@ -21,9 +21,15 @@
         </el-form-item>
         
         <el-form-item label="角色" prop="role">
-          <el-select v-model="form.role" placeholder="请选择角色">
+          <el-select v-model="form.role" placeholder="请选择角色" @change="handleRoleChange" style="width:100%">
             <el-option label="学生" value="学生" />
             <el-option label="教师" value="教师" />
+          </el-select>
+        </el-form-item>
+        
+        <el-form-item v-if="showClassSelect" label="所属班级" prop="class_id">
+          <el-select v-model="form.class_id" placeholder="请选择班级" style="width:100%">
+            <el-option v-for="c in classList" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
         </el-form-item>
         
@@ -43,7 +49,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import api from "@/api";
@@ -51,12 +57,18 @@ import api from "@/api";
 const router = useRouter();
 const formRef = ref(null);
 const loading = ref(false);
+const classList = ref([]);
 
 const form = reactive({
   username: "",
   password: "",
   confirmPassword: "",
   role: "学生",
+  class_id: "",
+});
+
+const showClassSelect = computed(() => {
+  return form.role === "学生" || form.role === "教师";
 });
 
 const validateConfirmPassword = (rule, value, callback) => {
@@ -80,6 +92,21 @@ const rules = {
   role: [{ required: true, message: "请选择角色", trigger: "change" }],
 };
 
+const handleRoleChange = () => {
+  form.class_id = "";
+};
+
+const fetchClasses = async () => {
+  try {
+    const res = await api.get("/classes");
+    if (res.data.success) {
+      classList.value = res.data.data;
+    }
+  } catch (error) {
+    console.error("获取班级列表失败:", error);
+  }
+};
+
 const handleRegister = async () => {
   try {
     await formRef.value.validate();
@@ -94,6 +121,7 @@ const handleRegister = async () => {
       username: form.username,
       password: form.password,
       role: form.role,
+      class_id: form.class_id || null,
     });
     
     if (res.data.success) {
@@ -112,6 +140,10 @@ const handleRegister = async () => {
 const goToLogin = () => {
   router.push("/login");
 };
+
+onMounted(() => {
+  fetchClasses();
+});
 </script>
 
 <style scoped>

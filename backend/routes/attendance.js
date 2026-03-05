@@ -40,11 +40,10 @@ router.get('/', (req, res) => {
   const classId = decodeHeader(req.headers['x-class-id']);
   const connection = getConnection();
   
-  let sql = `SELECT sc.id, sc.student_id, sc.course_id, sc.score, sc.semester,
-              st.name as student_name, st.class_id, c.name as course_name
-              FROM scores sc
-              LEFT JOIN students st ON sc.student_id = st.id
-              LEFT JOIN courses c ON sc.course_id = c.id`;
+  let sql = `SELECT a.*, s.name as student_name, s.class_id, c.name as course_name 
+              FROM attendance a
+              LEFT JOIN students s ON a.student_id = s.id
+              LEFT JOIN courses c ON a.course_id = c.id`;
   let params = [];
   
   if (role === '学生') {
@@ -53,33 +52,33 @@ router.get('/', (req, res) => {
         connection.end();
         return res.json({ success: true, data: [] });
       }
-      sql += ' WHERE sc.student_id = ?';
+      sql += ' WHERE a.student_id = ?';
       params.push(studentId);
-      sql += ' ORDER BY sc.id DESC';
+      sql += ' ORDER BY a.id DESC';
       connection.query(sql, params, (err, results) => {
         connection.end();
-        if (err) return res.status(500).json({ success: false, message: '获取成绩列表失败' });
+        if (err) return res.status(500).json({ success: false, message: '获取考勤列表失败' });
         res.json({ success: true, data: results });
       });
     });
   } else if (role === '教师') {
     getTeacherClassId(username, connection, (classId) => {
       if (classId) {
-        sql += ' WHERE st.class_id = ?';
+        sql += ' WHERE s.class_id = ?';
         params.push(classId);
       }
-      sql += ' ORDER BY sc.id DESC';
+      sql += ' ORDER BY a.id DESC';
       connection.query(sql, params, (err, results) => {
         connection.end();
-        if (err) return res.status(500).json({ success: false, message: '获取成绩列表失败' });
+        if (err) return res.status(500).json({ success: false, message: '获取考勤列表失败' });
         res.json({ success: true, data: results });
       });
     });
   } else {
-    sql += ' ORDER BY sc.id DESC';
+    sql += ' ORDER BY a.id DESC';
     connection.query(sql, (err, results) => {
       connection.end();
-      if (err) return res.status(500).json({ success: false, message: '获取成绩列表失败' });
+      if (err) return res.status(500).json({ success: false, message: '获取考勤列表失败' });
       res.json({ success: true, data: results });
     });
   }
@@ -88,13 +87,13 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
   const username = decodeHeader(req.headers['x-username']);
   const role = decodeHeader(req.headers['x-user-role']);
-  const { student_id, course_id, score, semester } = req.body;
+  const { student_id, course_id, date, status, remark } = req.body;
   
   if (role === '学生') {
-    return res.status(403).json({ success: false, message: '学生不能添加成绩' });
+    return res.status(403).json({ success: false, message: '学生不能添加考勤' });
   }
   
-  if (!student_id || !course_id) return res.json({ success: false, message: '学生和课程不能为空' });
+  if (!student_id || !date) return res.json({ success: false, message: '学生和日期不能为空' });
   
   const connection = getConnection();
   
@@ -106,18 +105,18 @@ router.post('/', (req, res) => {
           connection.end();
           return res.status(403).json({ success: false, message: '只能管理本班学生' });
         }
-        insertScore(connection);
+        insertAttendance(connection);
       });
     });
   } else {
-    insertScore(connection);
+    insertAttendance(connection);
   }
   
-  function insertScore(connection) {
-    const sql = 'INSERT INTO scores (student_id, course_id, score, semester) VALUES (?, ?, ?, ?)';
-    connection.query(sql, [student_id, course_id, score, semester], (err, _results) => {
+  function insertAttendance(connection) {
+    const sql = 'INSERT INTO attendance (student_id, course_id, date, status, remark) VALUES (?, ?, ?, ?, ?)';
+    connection.query(sql, [student_id, course_id, date, status || '正常', remark], (err, _results) => {
       connection.end();
-      if (err) return res.status(500).json({ success: false, message: '添加成绩失败' });
+      if (err) return res.status(500).json({ success: false, message: '添加考勤失败' });
       res.json({ success: true, message: '添加成功' });
     });
   }
@@ -127,10 +126,10 @@ router.put('/:id', (req, res) => {
   const username = decodeHeader(req.headers['x-username']);
   const role = decodeHeader(req.headers['x-user-role']);
   const { id } = req.params;
-  const { student_id, course_id, score, semester } = req.body;
+  const { student_id, course_id, date, status, remark } = req.body;
   
   if (role === '学生') {
-    return res.status(403).json({ success: false, message: '学生不能修改成绩' });
+    return res.status(403).json({ success: false, message: '学生不能修改考勤' });
   }
   
   const connection = getConnection();
@@ -143,18 +142,18 @@ router.put('/:id', (req, res) => {
           connection.end();
           return res.status(403).json({ success: false, message: '只能管理本班学生' });
         }
-        updateScore(connection);
+        updateAttendance(connection);
       });
     });
   } else {
-    updateScore(connection);
+    updateAttendance(connection);
   }
   
-  function updateScore(connection) {
-    const sql = 'UPDATE scores SET student_id = ?, course_id = ?, score = ?, semester = ? WHERE id = ?';
-    connection.query(sql, [student_id, course_id, score, semester, id], (err, _results) => {
+  function updateAttendance(connection) {
+    const sql = 'UPDATE attendance SET student_id = ?, course_id = ?, date = ?, status = ?, remark = ? WHERE id = ?';
+    connection.query(sql, [student_id, course_id, date, status, remark, id], (err, _results) => {
       connection.end();
-      if (err) return res.status(500).json({ success: false, message: '更新成绩失败' });
+      if (err) return res.status(500).json({ success: false, message: '更新考勤失败' });
       res.json({ success: true, message: '更新成功' });
     });
   }
@@ -165,15 +164,15 @@ router.delete('/:id', (req, res) => {
   const role = decodeHeader(req.headers['x-user-role']);
   
   if (role === '学生') {
-    return res.status(403).json({ success: false, message: '学生不能删除成绩' });
+    return res.status(403).json({ success: false, message: '学生不能删除考勤' });
   }
   
   const { id } = req.params;
   const connection = getConnection();
-  const sql = 'DELETE FROM scores WHERE id = ?';
+  const sql = 'DELETE FROM attendance WHERE id = ?';
   connection.query(sql, [id], (err, _results) => {
     connection.end();
-    if (err) return res.status(500).json({ success: false, message: '删除成绩失败' });
+    if (err) return res.status(500).json({ success: false, message: '删除考勤失败' });
     res.json({ success: true, message: '删除成功' });
   });
 });

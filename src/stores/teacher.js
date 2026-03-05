@@ -1,10 +1,11 @@
 import { defineStore } from "pinia";
 import api from "@/api";
+import { ElMessage } from "element-plus";
 
 export const useTeacherStore = defineStore("teacher", {
   state: () => ({
     teacherList: [],
-    editForm: { id: "", name: "", gender: "", title: "", department: "", phone: "" },
+    editForm: { id: "", name: "", password: "", gender: "", title: "", department: "", phone: "", class_id: "" },
     showDialog: false,
   }),
   actions: {
@@ -20,13 +21,25 @@ export const useTeacherStore = defineStore("teacher", {
     },
     async saveTeacher() {
       try {
-        if (this.editForm.id) {
-          await api.put(`/teachers/${this.editForm.id}`, this.editForm);
-        } else {
-          await api.post("/teachers", this.editForm);
+        const { password, name, class_id, ...teacherData } = this.editForm;
+        
+        if (!class_id) {
+          ElMessage.error("请选择班级");
+          return;
         }
+        
+        if (this.editForm.id) {
+          await api.put(`/teachers/${this.editForm.id}`, { ...teacherData, class_id });
+        } else {
+          await api.post("/teachers", { ...teacherData, class_id });
+          
+          if (name && password) {
+            await api.post("/users", { username: name, password, role: "教师", class_id });
+          }
+        }
+        
         await this.fetchTeachers();
-        this.editForm = { id: "", name: "", gender: "", title: "", department: "", phone: "" };
+        this.editForm = { id: "", name: "", password: "", gender: "", title: "", department: "", phone: "", class_id: "" };
         this.showDialog = false;
       } catch (error) {
         console.error("保存教师失败:", error);
@@ -41,11 +54,11 @@ export const useTeacherStore = defineStore("teacher", {
       }
     },
     editTeacher(row) {
-      this.editForm = { ...row };
+      this.editForm = { ...row, password: "" };
       this.showDialog = true;
     },
     addTeacher() {
-      this.editForm = { id: "", name: "", gender: "", title: "", department: "", phone: "" };
+      this.editForm = { id: "", name: "", password: "", gender: "", title: "", department: "", phone: "", class_id: "" };
       this.showDialog = true;
     },
   },

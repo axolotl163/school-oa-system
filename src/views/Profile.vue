@@ -9,6 +9,15 @@
         <el-form-item label="角色">
           <el-input v-model="userInfo.role" disabled />
         </el-form-item>
+        <el-form-item v-if="userInfo.class_id" label="所属班级">
+          <el-input :value="getClassName(userInfo.class_id)" disabled />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="userInfo.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="updatePhone">保存手机号</el-button>
+        </el-form-item>
         <el-form-item label="登录时间">
           <el-input v-model="loginTime" disabled />
         </el-form-item>
@@ -63,15 +72,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useLoginStore } from "@/stores/login";
+import { useClassStore } from "@/stores/class";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Lock, Delete, Warning } from "@element-plus/icons-vue";
 import api from "@/api";
 
 const router = useRouter();
 const loginStore = useLoginStore();
+const classStore = useClassStore();
 
 const userInfo = ref({ ...loginStore.userInfo });
 const loginTime = ref(new Date().toLocaleString());
@@ -80,32 +91,70 @@ const showDeactivateDialog = ref(false);
 
 const isAdmin = computed(() => userInfo.value.role === "管理员");
 
-const pwdForm = ref({
-  oldPwd: "",
-  newPwd: "",
-  confirmPwd: "",
+const pwdForm = ref({ oldPwd: "", newPwd: "", confirmPwd: "" });
+const deactivateForm = ref({ password: "" });
+
+onMounted(() => {
+  classStore.fetchClasses();
 });
 
-const deactivateForm = ref({
-  password: "",
-});
+function getClassName(classId) {
+  if (!classId) return '-';
+  const cls = classStore.classList.find(c => c.id === classId);
+  return cls ? cls.name : '-';
+}
+
+const updatePhone = async () => {
+  try {
+    const res = await api.post("/profile/update-profile", {
+      phone: userInfo.value.phone
+    }, {
+      headers: { 'x-username': encodeURIComponent(loginStore.userInfo.username) }
+    });
+    
+    if (res.data.success) {
+      ElMessage.success("手机号保存成功！");
+      loginStore.userInfo.phone = userInfo.value.phone;
+    } else {
+      ElMessage.error(res.data.message || "保存失败");
+    }
+  } catch (e) {
+    ElMessage.error("保存失败");
+  }
+};
 
 const changePwd = async () => {
-  if (pwdForm.value.oldPwd !== "admin" && pwdForm.value.oldPwd !== "teacher" && pwdForm.value.oldPwd !== "student") {
-    ElMessage.error("原密码错误！");
-    return;
-  }
-  if (pwdForm.value.newPwd !== pwdForm.value.confirmPwd) {
-    ElMessage.error("两次密码不一致！");
+  if (!pwdForm.value.oldPwd) {
+    ElMessage.error("请输入原密码！");
     return;
   }
   if (!pwdForm.value.newPwd) {
     ElMessage.error("新密码不能为空！");
     return;
   }
-  ElMessage.success("密码修改成功（模拟）！新密码：" + pwdForm.value.newPwd);
-  showPwdDialog.value = false;
-  pwdForm.value = { oldPwd: "", newPwd: "", confirmPwd: "" };
+  if (pwdForm.value.newPwd !== pwdForm.value.confirmPwd) {
+    ElMessage.error("两次密码不一致！");
+    return;
+  }
+  
+  try {
+    const res = await api.post("/profile/update-profile", {
+      oldPassword: pwdForm.value.oldPwd,
+      newPassword: pwdForm.value.newPwd
+    }, {
+      headers: { 'x-username': encodeURIComponent(loginStore.userInfo.username) }
+    });
+    
+    if (res.data.success) {
+      ElMessage.success("密码修改成功！");
+      showPwdDialog.value = false;
+      pwdForm.value = { oldPwd: "", newPwd: "", confirmPwd: "" };
+    } else {
+      ElMessage.error(res.data.message || "原密码错误");
+    }
+  } catch (e) {
+    ElMessage.error("密码修改失败");
+  }
 };
 
 const handleDeactivate = async () => {

@@ -8,11 +8,15 @@ api.interceptors.request.use(
   (config) => {
     const username = localStorage.getItem("username");
     const role = localStorage.getItem("role");
+    const classId = localStorage.getItem("class_id");
     if (username) {
       config.headers["X-Username"] = encodeURIComponent(username);
     }
     if (role) {
       config.headers["X-User-Role"] = encodeURIComponent(role);
+    }
+    if (classId) {
+      config.headers["X-Class-Id"] = encodeURIComponent(classId);
     }
     return config;
   },

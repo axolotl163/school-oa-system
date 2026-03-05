@@ -8,8 +8,8 @@
             <div class="stat-item">
               <el-icon class="stat-icon"><User /></el-icon>
               <div class="stat-text">
-                <div>学生总数</div>
-                <div class="stat-num">{{ studentList.length }}</div>
+                <div>{{ studentLabel }}</div>
+                <div class="stat-num">{{ studentCount }}</div>
               </div>
             </div>
           </el-col>
@@ -51,14 +51,33 @@
 import { ref, computed, onMounted } from "vue";
 import { useStudentStore } from "@/stores/student";
 import { useNoticeStore } from "@/stores/notice";
+import { useLoginStore } from "@/stores/login";
 import { User, Message, Calendar } from "@element-plus/icons-vue";
 
 const studentStore = useStudentStore();
 const noticeStore = useNoticeStore();
+const loginStore = useLoginStore();
 const nowTime = ref("");
 
-const studentList = computed(() => studentStore.studentList);
 const noticeList = computed(() => noticeStore.noticeList);
+
+const studentLabel = computed(() => {
+  const role = loginStore.userInfo.role;
+  if (role === "学生") return "本班学生数";
+  if (role === "教师") return "本班学生数";
+  return "学生总数";
+});
+
+const studentCount = computed(() => {
+  const role = loginStore.userInfo.role;
+  const classId = loginStore.userInfo.class_id;
+  
+  if (role === "管理员" || !classId) {
+    return studentStore.studentList.length;
+  }
+  
+  return studentStore.studentList.filter(s => s.class_id === classId).length;
+});
 
 const updateTime = () => {
   nowTime.value = new Date().toLocaleString();
@@ -75,34 +94,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.home {
-  height: 100%;
-}
-.stats {
-  margin-top: 20px;
-}
-.stat-item {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-.stat-icon {
-  font-size: 32px;
-  color: #409eff;
-  margin-right: 20px;
-}
-.stat-text {
-  flex: 1;
-}
-.stat-num {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  margin-top: 5px;
-}
-.notice-section {
-  margin-top: 30px;
-}
+.home { height: 100%; }
+.stats { margin-top: 20px; }
+.stat-item { display: flex; align-items: center; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+.stat-icon { font-size: 32px; color: #409eff; margin-right: 20px; }
+.stat-text { flex: 1; }
+.stat-num { font-size: 24px; font-weight: bold; color: #333; margin-top: 5px; }
+.notice-section { margin-top: 30px; }
 </style>

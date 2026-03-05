@@ -6,6 +6,7 @@ export const useLoginStore = defineStore("login", {
     userInfo: {
       username: localStorage.getItem("username") || "",
       role: localStorage.getItem("role") || "学生",
+      class_id: localStorage.getItem("class_id") || null,
     },
   }),
   actions: {
@@ -15,9 +16,11 @@ export const useLoginStore = defineStore("login", {
         if (res.data.success) {
           this.userInfo.username = res.data.user.username;
           this.userInfo.role = res.data.user.role;
+          this.userInfo.class_id = res.data.user.class_id;
           localStorage.setItem("isLogin", "true");
           localStorage.setItem("username", username);
           localStorage.setItem("role", res.data.user.role);
+          localStorage.setItem("class_id", res.data.user.class_id || "");
           return true;
         } else {
           return false;
@@ -29,10 +32,11 @@ export const useLoginStore = defineStore("login", {
     },
     logout() {
       api.post("/auth/logout").catch(() => {});
-      this.userInfo = { username: "", role: "学生" };
+      this.userInfo = { username: "", role: "学生", class_id: null };
       localStorage.removeItem("isLogin");
       localStorage.removeItem("username");
       localStorage.removeItem("role");
+      localStorage.removeItem("class_id");
     },
   },
 });
