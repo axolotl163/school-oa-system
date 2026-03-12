@@ -109,8 +109,16 @@ router.put('/:id', (req, res) => {
   }
   
   function updateStudent(connection) {
+    if (!name || !age) {
+      connection.end();
+      return res.json({ success: false, message: '姓名、年龄不能为空' });
+    }
+    if (isNaN(age) || age <= 0) {
+      connection.end();
+      return res.json({ success: false, message: '年龄必须是有效的数字' });
+    }
     const sql = 'UPDATE students SET name = ?, age = ?, class_id = ?, phone = ? WHERE id = ?';
-    connection.query(sql, [name, age, class_id, phone, id], (err, _results) => {
+    connection.query(sql, [name, parseInt(age), class_id, phone || '', id], (err, _results) => {
       connection.end();
       if (err) return res.status(500).json({ success: false, message: '更新学生失败' });
       res.json({ success: true, message: '更新成功' });

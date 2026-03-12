@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -31,6 +32,9 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// 提供静态文件服务，指向前端的dist目录
+app.use(express.static(path.join(__dirname, '../dist')));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/notices', noticeRoutes);
@@ -52,10 +56,12 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/labs', labRoutes);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'School OA System API Server' });
+// 处理所有其他路由，返回index.html，支持前端路由
+app.get(/^.*$/, (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+  console.log(`Local access: http://localhost:${PORT}`);
 });

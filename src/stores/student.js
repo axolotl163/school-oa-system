@@ -17,27 +17,51 @@ export const useStudentStore = defineStore("student", {
     },
     async saveStudent() {
       try {
-        const { password, name, ...studentData } = this.editForm;
+        console.log("开始保存学生信息");
+        console.log("完整编辑表单:", this.editForm);
+        const { password, ...studentData } = this.editForm;
+        
+        console.log("提取的学生数据:", studentData);
         
         if (!studentData.class_id) {
           ElMessage.error("请选择班级");
+          console.log("班级ID为空，保存失败");
           return;
         }
         
+        console.log("保存学生信息:", studentData);
+        console.log("编辑表单ID:", this.editForm.id);
+        
         if (this.editForm.id) {
-          await api.put(`/students/${this.editForm.id}`, studentData);
+          console.log("更新学生信息，请求路径:", `/students/${this.editForm.id}`);
+          console.log("请求数据:", studentData);
+          const response = await api.put(`/students/${this.editForm.id}`, studentData);
+          console.log("更新响应:", response.data);
         } else {
-          await api.post("/students", studentData);
+          console.log("新增学生信息，请求路径:", "/students");
+          console.log("请求数据:", studentData);
+          const response = await api.post("/students", studentData);
+          console.log("新增响应:", response.data);
           
-          if (name && password) {
-            await api.post("/users", { username: name, password, role: "学生", class_id: studentData.class_id });
+          if (studentData.name && password) {
+            await api.post("/users", { username: studentData.name, password, role: "学生", class_id: studentData.class_id });
           }
         }
         
+        console.log("保存成功，重新获取学生列表");
         await this.fetchStudents();
         this.editForm = { id: "", name: "", password: "", age: "", class_id: "", phone: "" };
         this.showDialog = false;
-      } catch (error) { console.error("保存学生失败:", error); }
+        console.log("保存完成，重置表单");
+      } catch (error) {
+        console.error("保存学生失败:", error);
+        if (error.response) {
+          console.error("错误响应:", error.response.data);
+          console.error("错误状态码:", error.response.status);
+          console.error("错误请求路径:", error.config.url);
+          console.error("错误请求数据:", error.config.data);
+        }
+      }
     },
     async deleteStudent(id) {
       try { await api.delete(`/students/${id}`); await this.fetchStudents(); }

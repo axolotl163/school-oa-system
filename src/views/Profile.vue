@@ -114,7 +114,12 @@ const updatePhone = async () => {
     
     if (res.data.success) {
       ElMessage.success("手机号保存成功！");
+      // 同时更新loginStore、本地的userInfo和localStorage
       loginStore.userInfo.phone = userInfo.value.phone;
+      // 更新localStorage中的phone字段
+      localStorage.setItem("phone", userInfo.value.phone || "");
+      // 由于userInfo是深拷贝，需要同步更新
+      userInfo.value = { ...loginStore.userInfo };
     } else {
       ElMessage.error(res.data.message || "保存失败");
     }

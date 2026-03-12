@@ -24,17 +24,19 @@
         <el-table-column prop="created_at" label="创建时间" />
         <el-table-column label="操作" width="180">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="userStore.editUser(scope.row)">
-              <el-icon><Edit /></el-icon>编辑
-            </el-button>
-            <el-button 
-              v-if="!isCurrentUser(scope.row)" 
-              type="danger" 
-              size="small" 
-              @click="userStore.deleteUser(scope.row.id)"
-            >
-              <el-icon><Delete /></el-icon>删除
-            </el-button>
+            <template v-if="scope.row.role !== '管理员'">
+              <el-button type="primary" size="small" @click="userStore.editUser(scope.row)">
+                <el-icon><Edit /></el-icon>编辑
+              </el-button>
+              <el-button 
+                v-if="!isCurrentUser(scope.row)" 
+                type="danger" 
+                size="small" 
+                @click="userStore.deleteUser(scope.row.id)"
+              >
+                <el-icon><Delete /></el-icon>删除
+              </el-button>
+            </template>
           </template>
         </el-table-column>
       </el-table>

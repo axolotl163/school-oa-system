@@ -35,10 +35,17 @@ router.post('/update-profile', (req, res) => {
     });
   } else {
     if (phone !== undefined) {
+      // 更新users表中的手机号（适用于管理员和其他角色）
+      const userSql = 'UPDATE users SET phone = ? WHERE username = ?';
+      connection.query(userSql, [phone, username], (err) => {
+        if (err) console.error('更新用户电话失败:', err);
+      });
+      // 更新students表中的手机号
       const studentSql = 'UPDATE students SET phone = ? WHERE name = ?';
       connection.query(studentSql, [phone, username], (err) => {
         if (err) console.error('更新学生电话失败:', err);
       });
+      // 更新teachers表中的手机号
       const teacherSql = 'UPDATE teachers SET phone = ? WHERE name = ?';
       connection.query(teacherSql, [phone, username], (err) => {
         if (err) console.error('更新教师电话失败:', err);

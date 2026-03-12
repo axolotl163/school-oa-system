@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-const requireAuth = (to, from, next) => {
+const requireAuth = (to, from) => {
   const isLogin = localStorage.getItem("isLogin");
-  if (isLogin) { next(); } else { next("/login"); }
+  if (isLogin) { return true; } else { return "/login"; }
 };
 
 const routes = [

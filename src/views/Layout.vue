@@ -48,7 +48,7 @@
         </el-sub-menu>
         
         <el-menu-item index="/profile"><el-icon><UserFilled /></el-icon><template v-slot:title><span>个人中心</span></template></el-menu-item>
-        <el-menu-item @click="handleLogout"><el-icon><SwitchButton /></el-icon><template v-slot:title><span>退出登录</span></template></el-menu-item>
+        <el-menu-item index="logout" @click="handleLogout"><el-icon><SwitchButton /></el-icon><template v-slot:title><span>退出登录</span></template></el-menu-item>
       </el-menu>
     </aside>
 

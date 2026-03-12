@@ -3,6 +3,9 @@
     <el-card>
       <div class="card-header">
         <h3>学生信息管理</h3>
+        <div v-if="canEdit">管理员权限</div>
+        <div v-else>非管理员权限</div>
+        <div>用户角色: {{ loginStore.userInfo.role }}</div>
         <el-button type="primary" @click="studentStore.addStudent()" v-if="canEdit">
           <el-icon><Plus /></el-icon>新增学生
         </el-button>
