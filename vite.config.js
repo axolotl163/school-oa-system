@@ -28,10 +28,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000
   },
   server: {
-    port: 2233,
+    port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:9331',
+        target: 'http://localhost:3000',
         changeOrigin: true,
       }
     }
