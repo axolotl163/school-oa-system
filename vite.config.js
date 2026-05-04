@@ -14,7 +14,21 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'element-plus': ['element-plus', '@element-plus/icons-vue'],
+          'vue-vendor': ['vue', 'vue-router', 'pinia', 'axios'],
+          'stores': ['@/stores/login', '@/stores/student', '@/stores/teacher', '@/stores/reward', '@/stores/funding'],
+          'views-large': ['@/views/Funding.vue', '@/views/UserManage.vue']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  },
   server: {
+    port: 2233,
     proxy: {
       '/api': {
         target: 'http://localhost:9331',

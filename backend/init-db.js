@@ -217,6 +217,79 @@ connection.connect((err) => {
           details TEXT,
           ip VARCHAR(50),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
+          `CREATE TABLE IF NOT EXISTS funding_projects (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          type VARCHAR(20) NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          quota INT NOT NULL,
+          application_start_date DATE NOT NULL,
+          application_end_date DATE NOT NULL,
+          requirements TEXT,
+          status VARCHAR(20) DEFAULT '开放',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
+          `CREATE TABLE IF NOT EXISTS applications (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          student_id INT NOT NULL,
+          project_id INT NOT NULL,
+          apply_reason TEXT,
+          materials TEXT,
+          status VARCHAR(20) DEFAULT '待审核',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (student_id) REFERENCES students(id),
+          FOREIGN KEY (project_id) REFERENCES funding_projects(id)
+        )`,
+          `CREATE TABLE IF NOT EXISTS approvals (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          application_id INT NOT NULL,
+          approver VARCHAR(50) NOT NULL,
+          approver_role VARCHAR(20) NOT NULL,
+          approval_level INT NOT NULL,
+          status VARCHAR(20) NOT NULL,
+          comment TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (application_id) REFERENCES applications(id)
+        )`,
+          `CREATE TABLE IF NOT EXISTS public_notices (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          project_id INT NOT NULL,
+          content TEXT,
+          start_date DATE NOT NULL,
+          end_date DATE NOT NULL,
+          status VARCHAR(20) DEFAULT '公示中',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (project_id) REFERENCES funding_projects(id)
+        )`,
+          `CREATE TABLE IF NOT EXISTS notice_records (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          notice_id INT NOT NULL,
+          student_id INT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (notice_id) REFERENCES public_notices(id),
+          FOREIGN KEY (student_id) REFERENCES students(id)
+        )`,
+          `CREATE TABLE IF NOT EXISTS objections (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          notice_id INT NOT NULL,
+          applicant VARCHAR(50) NOT NULL,
+          content TEXT NOT NULL,
+          status VARCHAR(20) DEFAULT '待处理',
+          reply TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (notice_id) REFERENCES public_notices(id)
+        )`,
+          `CREATE TABLE IF NOT EXISTS distributions (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          application_id INT NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          status VARCHAR(20) DEFAULT '待发放',
+          distribution_date DATE,
+          failure_reason TEXT,
+          confirmed_at TIMESTAMP NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (application_id) REFERENCES applications(id)
         )`
         ];
 
@@ -313,7 +386,35 @@ connection.connect((err) => {
             "INSERT IGNORE INTO tasks (title, content, status, priority, assignee, due_date) VALUES ('完成学期报告', '撰写本学期工作总结', '待处理', '高', 'admin', '2026-03-15')",
             "INSERT IGNORE INTO tasks (title, content, status, priority, assignee, due_date) VALUES ('整理档案', '归档上学期学生档案', '进行中', '普通', 'teacher1', '2026-03-20')",
             "INSERT IGNORE INTO notices (title, content, time) VALUES ('开学通知', '9月1日正式开学，请各位同学按时返校', '2026-03-01')",
-            "INSERT IGNORE INTO notices (title, content, time) VALUES ('奖学金申请', '3月10日前完成奖学金申请，逾期不候', '2026-03-02')"
+            "INSERT IGNORE INTO notices (title, content, time) VALUES ('奖学金申请', '3月10日前完成奖学金申请，逾期不候', '2026-03-02')",
+            "INSERT IGNORE INTO funding_projects (name, type, amount, quota, application_start_date, application_end_date, requirements, status) VALUES ('国家奖学金', '奖学金', 8000.00, 5, '2026-03-01', '2026-03-31', '品学兼优，综合素质突出', '开放')",
+            "INSERT IGNORE INTO funding_projects (name, type, amount, quota, application_start_date, application_end_date, requirements, status) VALUES ('国家助学金', '助学金', 3000.00, 20, '2026-03-01', '2026-03-31', '家庭经济困难学生', '开放')",
+            "INSERT IGNORE INTO funding_projects (name, type, amount, quota, application_start_date, application_end_date, requirements, status) VALUES ('校级一等奖学金', '奖学金', 5000.00, 10, '2026-03-01', '2026-03-31', '专业成绩排名前5%', '开放')",
+            "INSERT IGNORE INTO funding_projects (name, type, amount, quota, application_start_date, application_end_date, requirements, status) VALUES ('校级助学金', '助学金', 2000.00, 30, '2026-03-01', '2026-03-31', '家庭经济困难，学习努力', '开放')",
+            "INSERT IGNORE INTO applications (student_id, project_id, apply_reason, materials, status) VALUES (1, 1, '本人学习成绩优异，综合素质突出，符合国家奖学金申请条件。', '成绩单.pdf,获奖证书.pdf', '已通过')",
+            "INSERT IGNORE INTO applications (student_id, project_id, apply_reason, materials, status) VALUES (2, 1, '本人品学兼优，积极参加各类竞赛活动，获得多项奖项。', '成绩单.pdf,竞赛证书.pdf', '待审核')",
+            "INSERT IGNORE INTO applications (student_id, project_id, apply_reason, materials, status) VALUES (4, 2, '家庭经济困难，父母务农，收入微薄，希望获得助学金支持。', '贫困证明.pdf,家庭情况说明.pdf', '已通过')",
+            "INSERT IGNORE INTO applications (student_id, project_id, apply_reason, materials, status) VALUES (5, 2, '单亲家庭，母亲下岗，家庭负担较重。', '贫困证明.pdf,低保证明.pdf', '已驳回')",
+            "INSERT IGNORE INTO applications (student_id, project_id, apply_reason, materials, status) VALUES (7, 3, '专业成绩排名第一，符合一等奖学金条件。', '成绩单.pdf', '待审核')",
+            "INSERT IGNORE INTO applications (student_id, project_id, apply_reason, materials, status) VALUES (3, 4, '家庭经济困难，学习刻苦努力，成绩良好。', '贫困证明.pdf', '已通过')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (1, '王建国', '教师', 1, '通过', '同意推荐')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (1, '李明', '学院管理员', 2, '通过', '审核通过')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (1, 'admin', '管理员', 3, '通过', '同意发放')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (3, '李明', '教师', 1, '通过', '情况属实')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (3, '张伟', '学院管理员', 2, '通过', '审核通过')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (3, 'admin', '管理员', 3, '通过', '同意发放')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (4, '李明', '教师', 1, '驳回', '材料不全')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (6, '王建国', '教师', 1, '通过', '同意推荐')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (6, '李明', '学院管理员', 2, '通过', '审核通过')",
+            "INSERT IGNORE INTO approvals (application_id, approver, approver_role, approval_level, status, comment) VALUES (6, 'admin', '管理员', 3, '通过', '同意发放')",
+            "INSERT IGNORE INTO public_notices (project_id, content, start_date, end_date, status) VALUES (1, '根据评审结果，以下同学获得国家奖学金：\\n1. 张三（计算机1班）\\n2. 李四（计算机1班）', '2026-04-01', '2026-04-07', '公示中')",
+            "INSERT IGNORE INTO public_notices (project_id, content, start_date, end_date, status) VALUES (2, '根据评审结果，以下同学获得国家助学金：\\n1. 王五（计算机2班）\\n2. 赵六（计算机2班）\\n3. 钱七（软件工程1班）', '2026-04-01', '2026-04-07', '公示中')",
+            "INSERT IGNORE INTO objections (notice_id, applicant, content, status, reply) VALUES (1, '赵六', '张三同学的成绩排名有疑问，希望核实。', '已处理', '经核实，张三同学成绩排名真实有效。')",
+            "INSERT IGNORE INTO objections (notice_id, applicant, content, status, reply) VALUES (2, '孙八', '申请条件中是否包含单亲家庭？', '待处理', NULL)",
+            "INSERT IGNORE INTO distributions (application_id, amount, status, distribution_date, confirmed_at) VALUES (1, 8000.00, '已发放', '2026-04-15', '2026-04-16 10:30:00')",
+            "INSERT IGNORE INTO distributions (application_id, amount, status, distribution_date) VALUES (3, 3000.00, '已发放', '2026-04-15')",
+            "INSERT IGNORE INTO distributions (application_id, amount, status) VALUES (6, 2000.00, '待发放')",
+            "INSERT IGNORE INTO distributions (application_id, amount, status, failure_reason) VALUES (2, 8000.00, '发放失败', '银行卡信息有误')"
           ];
 
           let dataIndex = 0;

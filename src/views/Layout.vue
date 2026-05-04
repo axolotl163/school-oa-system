@@ -11,8 +11,12 @@
           <el-menu-item v-if="canAccess(['管理员', '教师'])" index="/score">成绩管理</el-menu-item>
           <el-menu-item v-if="canAccess(['管理员', '教师'])" index="/attendance">考勤管理</el-menu-item>
           <el-menu-item v-if="canAccess(['管理员', '教师'])" index="/reward">奖惩管理</el-menu-item>
+          <el-menu-item v-if="canAccess(['管理员', '教师'])" index="/funding">奖助贷管理</el-menu-item>
         </el-sub-menu>
         
+        <el-menu-item v-if="canAccess(['学生'])" index="/funding">
+          <el-icon><Wallet /></el-icon><template v-slot:title><span>奖助贷申请</span></template>
+        </el-menu-item>
         <el-menu-item v-if="canAccess(['学生'])" index="/score">
           <el-icon><TrendCharts /></el-icon><template v-slot:title><span>我的成绩</span></template>
         </el-menu-item>
@@ -68,7 +72,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useLoginStore } from "@/stores/login";
 import { ElMessage } from "element-plus";
-import { House, User, UserFilled, SwitchButton, Reading, Setting, Tools, Fold, Files, TrendCharts, Clock } from "@element-plus/icons-vue";
+import { House, User, UserFilled, SwitchButton, Reading, Setting, Tools, Fold, Files, TrendCharts, Clock, Wallet } from "@element-plus/icons-vue";
 
 const router = useRouter();
 const loginStore = useLoginStore();

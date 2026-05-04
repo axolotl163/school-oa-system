@@ -30,7 +30,8 @@ const routes = [
       { path: "project", name: "Project", component: () => import("../views/Project.vue") },
       { path: "achievement", name: "Achievement", component: () => import("../views/Achievement.vue") },
       { path: "lab", name: "Lab", component: () => import("../views/Lab.vue") },
-    ],
+      { path: "funding", name: "Funding", component: () => import("../views/Funding.vue") },
+      ],
   },
   { path: "/:pathMatch(.*)*", redirect: "/login" },
 ];

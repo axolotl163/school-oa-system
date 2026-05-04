@@ -24,6 +24,7 @@ const documentRoutes = require('./routes/documents');
 const projectRoutes = require('./routes/projects');
 const achievementRoutes = require('./routes/achievements');
 const labRoutes = require('./routes/labs');
+const fundingRoutes = require('./routes/funding');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -55,6 +56,7 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/labs', labRoutes);
+app.use('/api/funding', fundingRoutes);
 
 // 处理所有其他路由，返回index.html，支持前端路由
 app.get(/^.*$/, (req, res) => {
