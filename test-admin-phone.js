@@ -4,7 +4,7 @@ async function testAdminPhone() {
   try {
     // 测试管理员登录
     console.log('=== 测试管理员登录 ===');
-    const adminLoginResponse = await axios.post('http://localhost:3000/api/auth/login', {
+    const adminLoginResponse = await axios.post('http://localhost:9331/api/auth/login', {
       username: 'admin',
       password: 'admin'
     });
@@ -19,7 +19,7 @@ async function testAdminPhone() {
     // 测试更新管理员手机号
     console.log('\n=== 测试更新管理员手机号 ===');
     if (adminLoginResponse.data.success) {
-      const updateResponse = await axios.post('http://localhost:3000/api/profile/update-profile', {
+      const updateResponse = await axios.post('http://localhost:9331/api/profile/update-profile', {
         phone: '13900000000'
       }, {
         headers: {
@@ -30,7 +30,7 @@ async function testAdminPhone() {
       
       // 再次登录，验证手机号是否更新成功
       console.log('\n=== 再次测试管理员登录（验证手机号更新） ===');
-      const loginAgainResponse = await axios.post('http://localhost:3000/api/auth/login', {
+      const loginAgainResponse = await axios.post('http://localhost:9331/api/auth/login', {
         username: 'admin',
         password: 'admin'
       });
